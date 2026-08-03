@@ -1,0 +1,31 @@
+# Ignore data files (large, not needed in container)
+data/
+plots/
+
+# Ignore notebooks (not needed for serving)
+notebooks/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment files
+.env
+*.egg-info/
+.venv/
+venv/
+
+# Git and IDE
+.git/
+.gitignore
+.agents/
+.vscode/
+
+# Documentation (not needed in container)
+*.md
+experiments.json
+
+# OS files
+Thumbs.db
+.DS_Store

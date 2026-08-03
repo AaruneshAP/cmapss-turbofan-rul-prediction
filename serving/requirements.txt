@@ -1,0 +1,12 @@
+# Pinned versions — must match the training environment.
+# Mismatched xgboost/scikit-learn versions are the #1 reason
+# saved models fail to load in production.
+fastapi==0.141.1
+uvicorn==0.52.1
+xgboost==3.3.0
+scikit-learn==1.7.2
+pandas==2.3.2
+numpy==2.3.3
+joblib==1.5.2
+pyarrow==21.0.0
+pydantic==2.12.5

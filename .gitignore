@@ -1,0 +1,25 @@
+# Data files — large, local/Kaggle only
+data/
+plots/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+
+# Notebook output cells (keep .ipynb structure, strip outputs before commit)
+# Use `jupyter nbconvert --ClearOutputPreprocessor.enabled=True` before committing
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Environment
+.env

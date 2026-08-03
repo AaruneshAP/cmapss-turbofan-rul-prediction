@@ -1,0 +1,24 @@
+{
+  "selected_model": "XGBoost",
+  "selection_criterion": "CMAPSS asymmetric score (lower is better)",
+  "all_results": {
+    "XGBoost": {
+      "model": "XGBoost",
+      "params": {
+        "subsample": 1.0,
+        "reg_lambda": 1.0,
+        "reg_alpha": 0,
+        "n_estimators": 200,
+        "min_child_weight": 1,
+        "max_depth": 5,
+        "learning_rate": 0.05,
+        "colsample_bytree": 0.9
+      },
+      "cv_rmse": 15.701596393959852,
+      "val_rmse": 13.859854495187605,
+      "val_mae": 9.87494928898697,
+      "val_cmapss_score": 17982.423357574546,
+      "training_time_s": 345.0542290210724
+    }
+  }
+}
