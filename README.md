@@ -4,8 +4,12 @@ An end-to-end predictive maintenance system built on NASA's CMAPSS turbofan degr
 
 Given a stream of engine sensor readings, the system predicts **Remaining Useful Life (RUL)** — the number of cycles until the engine fails — and serves that prediction through a production-ready REST API deployed in Docker on Render.
 
-**Live API:** https://cmapss-rul-api-gfxh.onrender.com
-**Interactive docs:** https://cmapss-rul-api-gfxh.onrender.com/docs
+**Live API docs (interactive):** https://cmapss-rul-api-gfxh.onrender.com/docs
+**Health check:** https://cmapss-rul-api-gfxh.onrender.com/health
+
+> The bare domain (`.../` with no path) intentionally returns a small JSON
+> pointer to these two links rather than a 404 — see the root route in
+> `serving/app.py`.
 
 > Runs on Render's free tier, which sleeps after 15 minutes of inactivity —
 > the first request after idle time can take 30–60s to respond while the

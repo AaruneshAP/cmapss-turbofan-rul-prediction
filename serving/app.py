@@ -223,6 +223,17 @@ app = FastAPI(
 )
 
 
+@app.get("/")
+def root():
+    """Root endpoint — quick orientation pointer for anyone hitting the bare domain."""
+    return {
+        "message": "CMAPSS RUL Prediction API",
+        "docs": "/docs",
+        "health": "/health",
+        "predict": "/predict",
+    }
+
+
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
     """
