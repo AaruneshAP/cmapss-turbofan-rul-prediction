@@ -1,9 +1,13 @@
 # Pinned versions — must match the training environment.
-# Mismatched xgboost/scikit-learn versions are the #1 reason
-# saved models fail to load in production.
+# Mismatched scikit-learn versions are a common reason saved models fail to
+# load in production.
+#
+# NOTE: torch is intentionally absent here. It is installed separately in the
+# Dockerfile using the CPU-only index URL (no version pin — the CPU index uses
+# suffixed versions like 2.5.0+cpu that don't match plain semver pins).
+# See the Dockerfile Step 1 comment for details.
 fastapi==0.141.1
 uvicorn==0.52.1
-xgboost==3.3.0
 scikit-learn==1.7.2
 pandas==2.3.2
 numpy==2.3.3

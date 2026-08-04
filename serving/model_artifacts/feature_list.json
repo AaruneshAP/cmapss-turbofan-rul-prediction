@@ -1,5 +1,47 @@
 {
+  "_note": "Regenerated from lstm_model.pt checkpoint on 2026-08-04. sensor_cols lists the 17 columns (3 settings + 14 active sensors) the LSTM uses as input features, in the exact order stored in the checkpoint. feature_cols_xgboost retains the original 99-column XGBoost flat-feature list for reference only.",
+  "model": "LSTM",
+  "input_size": 17,
+  "seq_length": 30,
+  "sensor_cols": [
+    "setting_1",
+    "setting_2",
+    "setting_3",
+    "sensor_2",
+    "sensor_3",
+    "sensor_4",
+    "sensor_7",
+    "sensor_8",
+    "sensor_9",
+    "sensor_11",
+    "sensor_12",
+    "sensor_13",
+    "sensor_14",
+    "sensor_15",
+    "sensor_17",
+    "sensor_20",
+    "sensor_21"
+  ],
   "feature_cols": [
+    "setting_1",
+    "setting_2",
+    "setting_3",
+    "sensor_2",
+    "sensor_3",
+    "sensor_4",
+    "sensor_7",
+    "sensor_8",
+    "sensor_9",
+    "sensor_11",
+    "sensor_12",
+    "sensor_13",
+    "sensor_14",
+    "sensor_15",
+    "sensor_17",
+    "sensor_20",
+    "sensor_21"
+  ],
+  "feature_cols_xgboost": [
     "setting_1",
     "setting_2",
     "setting_3",
@@ -102,20 +144,13 @@
     "sensor_21_w20_std",
     "sensor_21_w20_slope"
   ],
-  "sensor_cols": [
-    "sensor_2",
-    "sensor_3",
-    "sensor_4",
-    "sensor_7",
-    "sensor_8",
-    "sensor_9",
-    "sensor_11",
-    "sensor_12",
-    "sensor_13",
-    "sensor_14",
-    "sensor_15",
-    "sensor_17",
-    "sensor_20",
-    "sensor_21"
+  "dropped_sensors": [
+    "sensor_1",
+    "sensor_5",
+    "sensor_6",
+    "sensor_10",
+    "sensor_16",
+    "sensor_18",
+    "sensor_19"
   ]
 }

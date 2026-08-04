@@ -279,168 +279,176 @@ def train_lstm(
         print("  Install with: pip install torch")
         return None, None
 
-    print("\n" + "=" * 60)
-    print("Training LSTM Model")
-    print("=" * 60)
+    # --- All torch-dependent code is inside this block so that the names
+    #     `torch`, `nn`, `TensorDataset`, and `DataLoader` are guaranteed to
+    #     be defined before use and any unexpected torch error is surfaced. ---
+    try:
+        print("\n" + "=" * 60)
+        print("Training LSTM Model")
+        print("=" * 60)
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Device: {device}")
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(f"Device: {device}")
 
-    # Use only raw sensor columns (not rolling features) for LSTM
-    # LSTM will learn temporal patterns itself
-    sensor_cols = [c for c in feature_cols if "_w" not in c]
-    print(f"LSTM input features: {len(sensor_cols)} (raw sensors + settings)")
+        # Use only raw sensor columns (not rolling features) for LSTM
+        # LSTM will learn temporal patterns itself
+        sensor_cols = [c for c in feature_cols if "_w" not in c]
+        print(f"LSTM input features: {len(sensor_cols)} (raw sensors + settings)")
 
-    # Create sequences
-    print("Creating sequences...")
-    X_train, y_train = create_sequences(train_df, sensor_cols, LSTM_SEQUENCE_LENGTH)
-    X_val, y_val = create_sequences(val_df, sensor_cols, LSTM_SEQUENCE_LENGTH)
-    print(f"Train sequences: {X_train.shape}, Val sequences: {X_val.shape}")
+        # Create sequences
+        print("Creating sequences...")
+        X_train, y_train = create_sequences(train_df, sensor_cols, LSTM_SEQUENCE_LENGTH)
+        X_val, y_val = create_sequences(val_df, sensor_cols, LSTM_SEQUENCE_LENGTH)
+        print(f"Train sequences: {X_train.shape}, Val sequences: {X_val.shape}")
 
-    # PyTorch datasets
-    train_dataset = TensorDataset(
-        torch.from_numpy(X_train), torch.from_numpy(y_train)
-    )
-    val_dataset = TensorDataset(
-        torch.from_numpy(X_val), torch.from_numpy(y_val)
-    )
-    train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=256, shuffle=False)
+        # PyTorch datasets
+        train_dataset = TensorDataset(
+            torch.from_numpy(X_train), torch.from_numpy(y_train)
+        )
+        val_dataset = TensorDataset(
+            torch.from_numpy(X_val), torch.from_numpy(y_val)
+        )
+        train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True)
+        val_loader = DataLoader(val_dataset, batch_size=256, shuffle=False)
 
-    # Model definition
-    class LSTMModel(nn.Module):
-        def __init__(self, input_size, hidden_size=64, num_layers=2, dropout=0.3):
-            super().__init__()
-            self.lstm = nn.LSTM(
-                input_size=input_size,
-                hidden_size=hidden_size,
-                num_layers=num_layers,
-                batch_first=True,
-                dropout=dropout,
-            )
-            self.fc = nn.Sequential(
-                nn.Linear(hidden_size, 32),
-                nn.ReLU(),
-                nn.Dropout(0.2),
-                nn.Linear(32, 1),
-            )
+        # Model definition
+        class LSTMModel(nn.Module):
+            def __init__(self, input_size, hidden_size=64, num_layers=2, dropout=0.3):
+                super().__init__()
+                self.lstm = nn.LSTM(
+                    input_size=input_size,
+                    hidden_size=hidden_size,
+                    num_layers=num_layers,
+                    batch_first=True,
+                    dropout=dropout,
+                )
+                self.fc = nn.Sequential(
+                    nn.Linear(hidden_size, 32),
+                    nn.ReLU(),
+                    nn.Dropout(0.2),
+                    nn.Linear(32, 1),
+                )
 
-        def forward(self, x):
-            lstm_out, _ = self.lstm(x)
-            # Use only the last time step's output
-            last_output = lstm_out[:, -1, :]
-            return self.fc(last_output).squeeze(-1)
+            def forward(self, x):
+                lstm_out, _ = self.lstm(x)
+                # Use only the last time step's output
+                last_output = lstm_out[:, -1, :]
+                return self.fc(last_output).squeeze(-1)
 
-    input_size = X_train.shape[2]
-    model = LSTMModel(input_size=input_size).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-    criterion = nn.MSELoss()
+        input_size = X_train.shape[2]
+        model = LSTMModel(input_size=input_size).to(device)
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+        criterion = nn.MSELoss()
 
-    # Training loop with early stopping
-    n_epochs = 50
-    patience = 10
-    best_val_loss = float("inf")
-    patience_counter = 0
-    best_state = None
+        # Training loop with early stopping
+        n_epochs = 50
+        patience = 10
+        best_val_loss = float("inf")
+        patience_counter = 0
+        best_state = None
 
-    print(f"\nTraining for up to {n_epochs} epochs (patience={patience})...")
-    start_time = time.time()
+        print(f"\nTraining for up to {n_epochs} epochs (patience={patience})...")
+        start_time = time.time()
 
-    for epoch in range(n_epochs):
-        # Train
-        model.train()
-        train_losses = []
-        for X_batch, y_batch in train_loader:
-            X_batch, y_batch = X_batch.to(device), y_batch.to(device)
-            optimizer.zero_grad()
-            y_pred = model(X_batch)
-            loss = criterion(y_pred, y_batch)
-            loss.backward()
-            optimizer.step()
-            train_losses.append(loss.item())
-
-        # Validate
-        model.eval()
-        val_losses = []
-        with torch.no_grad():
-            for X_batch, y_batch in val_loader:
+        for epoch in range(n_epochs):
+            # Train
+            model.train()
+            train_losses = []
+            for X_batch, y_batch in train_loader:
                 X_batch, y_batch = X_batch.to(device), y_batch.to(device)
+                optimizer.zero_grad()
                 y_pred = model(X_batch)
                 loss = criterion(y_pred, y_batch)
-                val_losses.append(loss.item())
+                loss.backward()
+                optimizer.step()
+                train_losses.append(loss.item())
 
-        avg_train_loss = np.mean(train_losses)
-        avg_val_loss = np.mean(val_losses)
+            # Validate
+            model.eval()
+            val_losses = []
+            with torch.no_grad():
+                for X_batch, y_batch in val_loader:
+                    X_batch, y_batch = X_batch.to(device), y_batch.to(device)
+                    y_pred = model(X_batch)
+                    loss = criterion(y_pred, y_batch)
+                    val_losses.append(loss.item())
 
-        if (epoch + 1) % 5 == 0 or epoch == 0:
-            print(f"  Epoch {epoch+1:3d} | Train Loss: {avg_train_loss:.4f} | Val Loss: {avg_val_loss:.4f}")
+            avg_train_loss = np.mean(train_losses)
+            avg_val_loss = np.mean(val_losses)
 
-        # Early stopping
-        if avg_val_loss < best_val_loss:
-            best_val_loss = avg_val_loss
-            best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
-            patience_counter = 0
-        else:
-            patience_counter += 1
-            if patience_counter >= patience:
-                print(f"  Early stopping at epoch {epoch+1}")
-                break
+            if (epoch + 1) % 5 == 0 or epoch == 0:
+                print(f"  Epoch {epoch+1:3d} | Train Loss: {avg_train_loss:.4f} | Val Loss: {avg_val_loss:.4f}")
 
-    elapsed = time.time() - start_time
-    print(f"Training completed in {elapsed:.1f}s")
+            # Early stopping
+            if avg_val_loss < best_val_loss:
+                best_val_loss = avg_val_loss
+                best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
+                patience_counter = 0
+            else:
+                patience_counter += 1
+                if patience_counter >= patience:
+                    print(f"  Early stopping at epoch {epoch+1}")
+                    break
 
-    # Load best model and evaluate
-    model.load_state_dict(best_state)
-    model.eval()
+        elapsed = time.time() - start_time
+        print(f"Training completed in {elapsed:.1f}s")
 
-    all_preds = []
-    all_targets = []
-    with torch.no_grad():
-        for X_batch, y_batch in val_loader:
-            X_batch = X_batch.to(device)
-            preds = model(X_batch).cpu().numpy()
-            all_preds.append(preds)
-            all_targets.append(y_batch.numpy())
+        # Load best model and evaluate
+        model.load_state_dict(best_state)
+        model.eval()
 
-    y_pred = np.concatenate(all_preds)
-    y_true = np.concatenate(all_targets)
+        all_preds = []
+        all_targets = []
+        with torch.no_grad():
+            for X_batch, y_batch in val_loader:
+                X_batch = X_batch.to(device)
+                preds = model(X_batch).cpu().numpy()
+                all_preds.append(preds)
+                all_targets.append(y_batch.numpy())
 
-    rmse = float(np.sqrt(mean_squared_error(y_true, y_pred)))
-    mae = float(mean_absolute_error(y_true, y_pred))
-    score = cmapss_score(y_true, y_pred)
+        y_pred = np.concatenate(all_preds)
+        y_true = np.concatenate(all_targets)
 
-    print(f"\nValidation Metrics:")
-    print(f"  RMSE:         {rmse:.4f}")
-    print(f"  MAE:          {mae:.4f}")
-    print(f"  CMAPSS Score: {score:.2f}")
+        rmse = float(np.sqrt(mean_squared_error(y_true, y_pred)))
+        mae = float(mean_absolute_error(y_true, y_pred))
+        score = cmapss_score(y_true, y_pred)
 
-    results = {
-        "model": "LSTM",
-        "params": {
-            "hidden_size": 64,
-            "num_layers": 2,
-            "dropout": 0.3,
-            "seq_length": LSTM_SEQUENCE_LENGTH,
-            "batch_size": 256,
-            "lr": 0.001,
-            "epochs_trained": epoch + 1,
-        },
-        "val_rmse": rmse,
-        "val_mae": mae,
-        "val_cmapss_score": score,
-        "training_time_s": elapsed,
-    }
+        print(f"\nValidation Metrics:")
+        print(f"  RMSE:         {rmse:.4f}")
+        print(f"  MAE:          {mae:.4f}")
+        print(f"  CMAPSS Score: {score:.2f}")
 
-    # Save LSTM model
-    model_path = os.path.join(ARTIFACTS_DIR, "lstm_model.pt")
-    torch.save({
-        "model_state_dict": best_state,
-        "input_size": input_size,
-        "sensor_cols": sensor_cols,
-    }, model_path)
-    print(f"Saved LSTM model: {model_path}")
+        results = {
+            "model": "LSTM",
+            "params": {
+                "hidden_size": 64,
+                "num_layers": 2,
+                "dropout": 0.3,
+                "seq_length": LSTM_SEQUENCE_LENGTH,
+                "batch_size": 256,
+                "lr": 0.001,
+                "epochs_trained": epoch + 1,
+            },
+            "val_rmse": rmse,
+            "val_mae": mae,
+            "val_cmapss_score": score,
+            "training_time_s": elapsed,
+        }
 
-    return model, results
+        # Save LSTM model
+        model_path = os.path.join(ARTIFACTS_DIR, "lstm_model.pt")
+        torch.save({
+            "model_state_dict": best_state,
+            "input_size": input_size,
+            "sensor_cols": sensor_cols,
+        }, model_path)
+        print(f"Saved LSTM model: {model_path}")
+
+        return model, results
+
+    except Exception as e:
+        print(f"\n[ERROR] LSTM training failed: {e}")
+        return None, None
 
 
 # ---------------------------------------------------------------------------
