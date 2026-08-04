@@ -33,9 +33,13 @@ COPY serving/ .
 # Expose the API port
 EXPOSE 8000
 
-# Health check for container orchestration
+# Health check for container orchestration.
+# Uses ${PORT:-8000} so it targets the same port uvicorn is actually bound to.
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
+    CMD python -c "import os,urllib.request; urllib.request.urlopen('http://localhost:' + os.environ.get('PORT','8000') + '/health')" || exit 1
 
-# Run with uvicorn
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run with uvicorn.
+# Shell form (not exec/JSON-array form) is required so the shell can expand
+# the $PORT environment variable that Render injects at runtime.
+# Falls back to 8000 for local docker run without -e PORT=....
+CMD uvicorn app:app --host 0.0.0.0 --port ${PORT:-8000}
