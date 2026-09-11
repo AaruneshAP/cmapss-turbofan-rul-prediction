@@ -4,11 +4,14 @@ An end-to-end predictive maintenance system built on NASA's CMAPSS turbofan degr
 
 Given a stream of engine sensor readings, the system predicts **Remaining Useful Life (RUL)** — the number of cycles until the engine fails — and serves that prediction through a production-ready REST API deployed in Docker on Render.
 
+**Try it live (interactive dashboard):** [Streamlit Cloud Dashboard](https://cmapss-turbofan-rul.streamlit.app/)
 **Live API docs (interactive):** https://cmapss-rul-api-gfxh.onrender.com/docs
 **Health check:** https://cmapss-rul-api-gfxh.onrender.com/health
 
+The interactive Streamlit dashboard lets a visitor pick any of the 100 test turbofan engines, scrub through its operational cycles (or autoplay with live telemetry), and watch real-time predictions from the live API evolve against ground-truth RUL. It visually validates the project's central finding: while XGBoost and LSTM achieve near-identical RMSE (~13.8), XGBoost exhibits dangerous overconfident predictions near end-of-life that the sequential LSTM model successfully avoids.
+
 > The bare domain (`.../` with no path) intentionally returns a small JSON
-> pointer to these two links rather than a 404 — see the root route in
+> pointer to these documentation and health links rather than a 404 — see the root route in
 > `serving/app.py`.
 
 > Runs on Render's free tier, which sleeps after 15 minutes of inactivity —
@@ -70,6 +73,11 @@ This project uses the **FD001** subset (single operating condition, one fault mo
 
 ```
 cmapss-predictive-maintenance/
+├── dashboard/                      # Interactive Streamlit application
+│   ├── app.py                      # UI with trajectory charts, autoplay, and overlays
+│   ├── data_utils.py               # Data loaders, caching, and live API client
+│   ├── requirements.txt            # Lightweight dashboard dependencies
+│   └── data/                       # Packaged test data & precomputed baseline
 ├── notebooks/
 │   ├── 01_exploration.ipynb        # EDA, sensor analysis, RUL construction
 │   ├── 02_feature_engineering.ipynb# Rolling features, scaling, parquet output
