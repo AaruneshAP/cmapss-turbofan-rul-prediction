@@ -4,7 +4,7 @@ An end-to-end predictive maintenance system built on NASA's CMAPSS turbofan degr
 
 Given a stream of engine sensor readings, the system predicts **Remaining Useful Life (RUL)** — the number of cycles until the engine fails — and serves that prediction through a production-ready REST API deployed in Docker on Render.
 
-**Try it live (interactive dashboard):** [Streamlit Cloud Dashboard](https://cmapss-turbofan-rul.streamlit.app/)
+**Try it live (interactive dashboard):** [Streamlit Cloud Dashboard](https://cmapss-turbofan-rul-prediction-ijmejvqzgpdoyibtrxqhqk.streamlit.app/)
 **Live API docs (interactive):** https://cmapss-rul-api-gfxh.onrender.com/docs
 **Health check:** https://cmapss-rul-api-gfxh.onrender.com/health
 

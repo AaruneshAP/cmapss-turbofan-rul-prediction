@@ -2,7 +2,7 @@
 
 An interactive Streamlit application for exploring NASA's CMAPSS turbofan engine degradation telemetry, tracking Remaining Useful Life (RUL) in real time, and visually comparing model calibration between the production **LSTM** network and the baseline **XGBoost** regressor.
 
-**Live Streamlit App:** [https://cmapss-turbofan-rul.streamlit.app/](https://cmapss-turbofan-rul.streamlit.app/)  
+**Live Streamlit App:** [https://cmapss-turbofan-rul-prediction-ijmejvqzgpdoyibtrxqhqk.streamlit.app/](https://cmapss-turbofan-rul-prediction-ijmejvqzgpdoyibtrxqhqk.streamlit.app/)  
 **Live Serving API (Render):** [https://cmapss-rul-api-gfxh.onrender.com](https://cmapss-rul-api-gfxh.onrender.com)  
 **Main Project Documentation:** [Full Project README](../README.md)
 
