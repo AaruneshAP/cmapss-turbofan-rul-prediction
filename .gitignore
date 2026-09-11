@@ -1,5 +1,6 @@
 # Data files — large, local/Kaggle only
 data/
+!dashboard/data/
 plots/
 
 # Python cache
