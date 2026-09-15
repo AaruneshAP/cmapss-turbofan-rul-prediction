@@ -1,0 +1,17 @@
+name: Keep Streamlit Dashboard Awake
+
+on:
+  schedule:
+    - cron: "0 * * * *"   # every hour
+  workflow_dispatch: {}
+
+jobs:
+  ping-dashboard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Streamlit app to keep it awake
+        run: |
+          curl -sSf --max-time 60 \
+            "https://cmapss-turbofan-rul-prediction-ijmejvqzgpdoyibtrxqhqk.streamlit.app/" \
+            -o /dev/null \
+            && echo "Ping succeeded — app is awake."
