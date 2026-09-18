@@ -33,7 +33,7 @@ The interactive Streamlit dashboard lets a visitor pick any of the 100 test turb
 8. [API Design](#8-api-design)
 9. [Running Locally](#9-running-locally)
 10. [Docker](#10-docker)
-11. [Deployment (Render)](#11-deployment-render)
+11. [Deployment (Render & Streamlit Cloud)](#11-deployment-render--streamlit-cloud)
 12. [Limitations & Future Work](#12-limitations--future-work)
 
 ---
@@ -73,6 +73,11 @@ This project uses the **FD001** subset (single operating condition, one fault mo
 
 ```
 cmapss-predictive-maintenance/
+├── .github/
+│   ├── keepalive/
+│   │   └── last-ping.txt           # Timestamp updated daily to keep Streamlit awake
+│   └── workflows/
+│       └── keep-alive.yml          # GitHub Actions scheduled keep-alive commit
 ├── dashboard/                      # Interactive Streamlit application
 │   ├── app.py                      # UI with trajectory charts, autoplay, and overlays
 │   ├── data_utils.py               # Data loaders, caching, and live API client
@@ -363,9 +368,11 @@ PyPI's default torch index serves CUDA wheels (~2 GB). The Dockerfile uses `--in
 
 ---
 
-## 11. Deployment (Render)
+## 11. Deployment (Render & Streamlit Cloud)
 
-The live API is deployed on Render's free tier as a Docker web service.
+### Fast-API Model Serving Layer (Render)
+
+The live inference API is deployed on Render's free tier as a Docker web service.
 
 **Live URL:** `https://cmapss-rul-api-gfxh.onrender.com`
 
@@ -379,19 +386,31 @@ curl -X POST https://cmapss-rul-api-gfxh.onrender.com/predict \
   -d @sample_payload.json
 ```
 
-### ⚠️ Cold-Start Behaviour
+#### ⚠️ Render Cold-Start Behaviour
 
 Render's free tier **spins down the container after 15 minutes of inactivity**. The first request after sleep takes **30–60 seconds** (container restart + Python boot + model load). This is **expected behaviour**, not a bug.
 
 **Before a live demo:** Send a health check request 1–2 minutes in advance to warm the service. Mentioning this in an interview demonstrates awareness of free-tier cloud constraints.
 
-### Deploying Your Own Instance
+#### Deploying Your Own API Instance
 
 1. Push to GitHub (the `data/` directory is gitignored — only code and artifacts are pushed)
 2. Create a new Render Web Service → Docker runtime → connect your repo → free plan
 3. Render injects `$PORT` automatically; the `CMD` reads it via `${PORT:-8000}`
 
 See [`deploy_notes.md`](deploy_notes.md) for full step-by-step instructions.
+
+### Interactive Telemetry Dashboard (Streamlit Community Cloud)
+
+**Live URL:** [Streamlit Cloud Dashboard](https://cmapss-turbofan-rul-prediction-ijmejvqzgpdoyibtrxqhqk.streamlit.app/)
+
+#### 💡 Streamlit Cloud Keep-Alive Strategy & Platform Behaviour
+
+Streamlit Community Cloud automatically hibernates inactive applications to conserve free-tier computing capacity. In early testing, an automated hourly HTTP ping via `curl` was configured in GitHub Actions to keep the dashboard awake.
+
+However, production observation uncovered a critical platform constraint: **plain HTTP pings do not reset Streamlit Cloud's sleep timer**. Streamlit's hibernation detector requires either an **active WebSocket client connection** or a **repository git commit**; stateless HTTP requests (`GET`/`HEAD`) return an HTTP 200 response but fail to prevent sleep.
+
+To guarantee continuous availability without manual interaction, the keep-alive workflow ([`.github/workflows/keep-alive.yml`](.github/workflows/keep-alive.yml)) was migrated from HTTP curl pings to a **daily scheduled git commit**. At `06:00 UTC` every day, a GitHub Actions runner writes the current UTC timestamp to [`.github/keepalive/last-ping.txt`](.github/keepalive/last-ping.txt) and pushes the change via the standard `github-actions[bot]` identity. Streamlit Cloud detects this repository activity and keeps the application alive and immediately accessible for recruiters, reviewers, and live interview demonstrations.
 
 ---
 

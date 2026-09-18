@@ -2,16 +2,34 @@ name: Keep Streamlit Dashboard Awake
 
 on:
   schedule:
-    - cron: "0 * * * *"   # every hour
+    - cron: "0 6 * * *"   # Run once daily at 06:00 UTC
   workflow_dispatch: {}
 
+permissions:
+  contents: write
+
 jobs:
-  ping-dashboard:
+  keep-alive-commit:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Streamlit app to keep it awake
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Update keep-alive timestamp
         run: |
-          curl -sSf --max-time 60 \
-            "https://cmapss-turbofan-rul-prediction-ijmejvqzgpdoyibtrxqhqk.streamlit.app/" \
-            -o /dev/null \
-            && echo "Ping succeeded — app is awake."
+          mkdir -p .github/keepalive
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > .github/keepalive/last-ping.txt
+
+      - name: Commit and push timestamp update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/keepalive/last-ping.txt
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: keep-alive timestamp update"
+            git push origin HEAD:${{ github.ref_name }}
+          else
+            echo "No changes to commit."
+          fi
